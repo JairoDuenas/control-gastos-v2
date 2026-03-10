@@ -2,6 +2,7 @@ import { useState } from "react";
 import styled from "styled-components";
 import { useSelector } from "react-redux";
 import { CategoriaCard } from "../components/organismos/CategoriaCard";
+import { CategoriasSummary } from "../components/moleculas/CategoriasSummary";
 import { CategoriaForm } from "../forms/CategoriaForm";
 import { Modal } from "../components/Modal/Modal";
 import { EmptyState } from "../components/moleculas/EmptyState";
@@ -35,6 +36,7 @@ export function CategoriasPage() {
 
   return (
     <PageShell>
+      {/* ── Hero ── */}
       <PageHero>
         <HeroLeft>
           <HeroTitle>Categorías</HeroTitle>
@@ -46,29 +48,10 @@ export function CategoriasPage() {
         <PrimaryBtn onClick={openAdd}>+ Nueva categoría</PrimaryBtn>
       </PageHero>
 
-      {/* Resumen horizontal — scroll en desktop, wrap en mobile */}
-      <ScrollRow>
-        {categorias.map((cat) => {
-          const total = movimientos
-            .filter((m) => m.categoriaId === cat.id)
-            .reduce((a, m) => a + m.monto, 0);
-          const pct = totalGlobal > 0 ? (total / totalGlobal) * 100 : 0;
-          return (
-            <SummaryChip key={cat.id} $color={cat.color}>
-              <ChipIcon>{cat.icono}</ChipIcon>
-              <ChipInfo>
-                <ChipName>{cat.nombre}</ChipName>
-                <ChipPct>{pct.toFixed(1)}%</ChipPct>
-              </ChipInfo>
-              <ChipBar>
-                <ChipFill $pct={pct} $color={cat.color} />
-              </ChipBar>
-            </SummaryChip>
-          );
-        })}
-      </ScrollRow>
+      {/* ── Chips de resumen por porcentaje ── */}
+      <CategoriasSummary categorias={categorias} movimientos={movimientos} />
 
-      {/* Grid de cards */}
+      {/* ── Grid de cards ── */}
       {categorias.length > 0 ? (
         <Grid>
           {categorias.map((cat, i) => (
@@ -91,6 +74,7 @@ export function CategoriasPage() {
         />
       )}
 
+      {/* ── Modal ── */}
       <Modal
         open={modalOpen}
         onClose={() => setModalOpen(false)}
@@ -102,108 +86,15 @@ export function CategoriasPage() {
   );
 }
 
-/* ── Styled locales ── */
-
-/* ✅ Siempre scroll horizontal — evita que los chips colapsen en mobile */
-const ScrollRow = styled.div`
-  display: flex;
-  gap: 10px;
-  overflow-x: auto;
-  padding-bottom: 6px;
-  /* Que no se compriman los chips */
-  flex-wrap: nowrap;
-
-  &::-webkit-scrollbar {
-    height: 4px;
-  }
-  &::-webkit-scrollbar-thumb {
-    background: ${({ theme }) => theme.colors.border};
-    border-radius: 4px;
-  }
-
-  /* En mobile mostramos scroll horizontal también, más cómodo que un grid apretado */
-  @media (max-width: 600px) {
-    /* padding lateral para que el primer chip no quede pegado al borde */
-    padding-left: 2px;
-    padding-right: 2px;
-    /* scroll snapping para mejor UX táctil */
-    scroll-snap-type: x mandatory;
-    -webkit-overflow-scrolling: touch;
-  }
-`;
-
-const SummaryChip = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 10px 12px;
-  border-radius: ${({ theme }) => theme.radii.md};
-  background: ${({ theme }) => theme.colors.bgCard};
-  border: 1px solid ${({ $color }) => `${$color}33`};
-  /* ✅ Ancho fijo para que el scroll funcione bien en cualquier pantalla */
-  flex: 0 0 148px;
-  min-width: 148px;
-
-  @media (max-width: 600px) {
-    scroll-snap-align: start;
-    flex: 0 0 140px;
-    min-width: 140px;
-  }
-`;
-
-const ChipIcon = styled.span`
-  font-size: 1.1rem;
-  flex-shrink: 0;
-`;
-const ChipInfo = styled.div`
-  flex: 1;
-  min-width: 0;
-`;
-const ChipName = styled.p`
-  font-family: ${({ theme }) => theme.fonts.head};
-  font-weight: 600;
-  font-size: 0.78rem;
-  color: ${({ theme }) => theme.colors.text1};
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-`;
-const ChipPct = styled.p`
-  font-size: 0.68rem;
-  color: ${({ theme }) => theme.colors.text3};
-`;
-const ChipBar = styled.div`
-  width: 34px;
-  height: 34px;
-  border-radius: 50%;
-  background: ${({ theme }) => theme.colors.border};
-  position: relative;
-  overflow: hidden;
-  flex-shrink: 0;
-`;
-const ChipFill = styled.div`
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  height: ${({ $pct }) => $pct}%;
-  background: ${({ $color }) => $color};
-  transition: height 0.5s ease;
-`;
-
-/* ✅ Grid responsive con auto-fill — se adapta solo sin tantos breakpoints manuales */
+/* ── Styled locales — solo grid y AddCard ── */
 const Grid = styled.div`
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
   gap: 14px;
-
-  /* En pantallas muy chicas forzamos 2 columnas para que no queden tarjetas enormes */
   @media (max-width: 480px) {
     grid-template-columns: repeat(2, 1fr);
     gap: 10px;
   }
-
-  /* En pantallas muy muy chicas, 1 columna */
   @media (max-width: 320px) {
     grid-template-columns: 1fr;
   }
@@ -227,10 +118,12 @@ const AddCard = styled.div`
     background: ${({ theme }) => theme.colors.accentGlow};
   }
 `;
+
 const AddIcon = styled.span`
   font-size: 1.8rem;
   color: ${({ theme }) => theme.colors.text3};
 `;
+
 const AddLabel = styled.span`
   font-family: ${({ theme }) => theme.fonts.head};
   font-weight: 600;
