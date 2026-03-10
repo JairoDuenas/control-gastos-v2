@@ -1,15 +1,24 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import styled from "styled-components";
 import { useDispatch, useSelector } from "react-redux";
 import { deleteCategoria } from "../../slices/categoriasSlice";
 
 export function CategoriaCard({ cat, onEdit }) {
   const dispatch = useDispatch();
-  const movs = useSelector((s) =>
-    s.movimientos.list.filter((m) => m.categoriaId === cat.id),
-  );
+
+  // ✅ Seleccionar primitivos estables en lugar de un array derivado.
+  //    .filter() crea una nueva referencia en cada render aunque el
+  //    contenido sea idéntico — Redux detecta la diferencia y emite
+  //    el warning "Selector returned a different result".
+  //    Solución: seleccionar la lista completa y derivar con useMemo.
+  const allMovs = useSelector((s) => s.movimientos.list);
   const moneda = useSelector((s) => s.auth.user?.moneda ?? "$");
-  const total = movs.reduce((a, m) => a + m.monto, 0);
+
+  const movs = useMemo(
+    () => allMovs.filter((m) => m.categoriaId === cat.id),
+    [allMovs, cat.id],
+  );
+  const total = useMemo(() => movs.reduce((a, m) => a + m.monto, 0), [movs]);
   const [confirm, setConfirm] = useState(false);
 
   return (

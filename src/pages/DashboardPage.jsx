@@ -1,7 +1,10 @@
 import { useMemo } from "react";
 import styled from "styled-components";
-import { useSelector, useDispatch } from "react-redux";
+import { useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
+import { useMovimientoModal } from "../hooks/useMovimientoModal";
+import { useMonthNav } from "../hooks/useMonthNav";
+import { MonthNavigator } from "../components/atomos/MonthNavigator";
 import { KpiCard } from "../components/moleculas/KpiCard";
 import { DonutChart } from "../components/graficas/DonutChart";
 import { BarChart } from "../components/graficas/BarChart";
@@ -21,10 +24,8 @@ import {
   CardTitle,
   MovList,
 } from "../components/ui/shared";
-import { useMovimientoModal } from "../hooks/useMovimientoModal";
-import { setFiltros } from "../slices/movimientosSlice";
 
-const MESES = [
+const MESES_CORTO = [
   "Ene",
   "Feb",
   "Mar",
@@ -40,7 +41,6 @@ const MESES = [
 ];
 
 export function DashboardPage() {
-  const dispatch = useDispatch();
   const navigate = useNavigate();
   const user = useSelector((s) => s.auth.user);
   const moneda = user?.moneda ?? "$";
@@ -48,17 +48,27 @@ export function DashboardPage() {
     (s) => s.movimientos,
   );
   const categorias = useSelector((s) => s.categorias.list);
-  // ✅ Accede al tema para colores en barData
-  const themeAccent = useSelector(() => null); // se obtiene via theme en el componente
 
+  // ── Navegación de mes (dispatch encapsulado en el hook) ─────────────────
+  const { mes, anio, mesCorto, navMes } = useMonthNav();
+
+  // ── Modal de movimientos ─────────────────────────────────────────────────
   const { modalOpen, editItem, openAdd, openEdit, closeModal } =
     useMovimientoModal();
 
-  const totalMovs = list.filter((m) => {
-    const d = new Date(m.fecha);
-    return d.getMonth() + 1 === filtros.mes && d.getFullYear() === filtros.anio;
-  });
+  // ── Movimientos del mes activo ───────────────────────────────────────────
+  const totalMovs = useMemo(
+    () =>
+      list.filter((m) => {
+        const d = new Date(m.fecha);
+        return (
+          d.getMonth() + 1 === filtros.mes && d.getFullYear() === filtros.anio
+        );
+      }),
+    [list, filtros.mes, filtros.anio],
+  );
 
+  // ── Datos para el donut (distribución por categoría del mes) ────────────
   const donutData = useMemo(() => {
     const map = {};
     totalMovs.forEach((m) => {
@@ -73,56 +83,55 @@ export function DashboardPage() {
       .slice(0, 7);
   }, [totalMovs, categorias]);
 
+  // ── Datos para el bar chart (6 meses centrados en filtros.mes/anio) ──────
+  // Se ancla a filtros.mes/anio (no a "hoy") para que la gráfica sea
+  // consistente con el mes que el usuario está visualizando en el dashboard.
   const barData = useMemo(() => {
-    const now = new Date();
     return Array.from({ length: 6 }, (_, i) => {
-      const d = new Date(now.getFullYear(), now.getMonth() - (5 - i), 1);
-      const mes = d.getMonth() + 1,
-        anio = d.getFullYear();
+      const d = new Date(filtros.anio, filtros.mes - 1 - (5 - i), 1);
+      const m = d.getMonth() + 1;
+      const a = d.getFullYear();
       const value = list
-        .filter((m) => {
-          const md = new Date(m.fecha);
-          return md.getMonth() + 1 === mes && md.getFullYear() === anio;
+        .filter((mov) => {
+          const md = new Date(mov.fecha);
+          return md.getMonth() + 1 === m && md.getFullYear() === a;
         })
-        .reduce((a, m) => a + m.monto, 0);
-      // ✅ El color de la barra se pasa como token y BarChart lo aplica —
-      //    el valor "#5b8dee" es el accent que no cambia entre temas, OK dejarlo aquí
-      //    pero si quisieras el dinámico, pasarías theme.colors.accent desde un wrapper
-      return { label: MESES[mes - 1], value, color: "#5b8dee" };
+        .reduce((acc, mov) => acc + mov.monto, 0);
+      // "#5b8dee" = accent, no cambia con el tema — correcto dejarlo aquí
+      return { label: MESES_CORTO[m - 1], value, color: "#5b8dee" };
     });
-  }, [list]);
+  }, [list, filtros.mes, filtros.anio]);
 
-  const recientes = [...totalMovs]
-    .sort((a, b) => new Date(b.fecha) - new Date(a.fecha))
-    .slice(0, 5);
-
-  const navMes = (offset) => {
-    const d = new Date(filtros.anio, filtros.mes - 1 + offset, 1);
-    dispatch(setFiltros({ mes: d.getMonth() + 1, anio: d.getFullYear() }));
-  };
+  // ── 5 movimientos más recientes del mes ──────────────────────────────────
+  const recientes = useMemo(
+    () =>
+      [...totalMovs]
+        .sort((a, b) => new Date(b.fecha) - new Date(a.fecha))
+        .slice(0, 5),
+    [totalMovs],
+  );
 
   return (
     <PageShell $gap="24px">
+      {/* ── Hero con navegador de mes ── */}
       <PageHero>
         <HeroLeft>
           <HeroTitle>Dashboard</HeroTitle>
           <HeroSub>
-            Bienvenido, <strong>{user?.nombre}</strong> ·{" "}
-            {MESES[filtros.mes - 1]} {filtros.anio}
+            Bienvenido, <strong>{user?.nombre}</strong> · {mesCorto} {anio}
           </HeroSub>
         </HeroLeft>
         <HeroRight>
-          <MonthNav>
-            <NavBtn onClick={() => navMes(-1)}>‹</NavBtn>
-            <MonthLabel>
-              {MESES[filtros.mes - 1]} {filtros.anio}
-            </MonthLabel>
-            <NavBtn onClick={() => navMes(1)}>›</NavBtn>
-          </MonthNav>
+          <MonthNavigator
+            label={`${mesCorto} ${anio}`}
+            onPrev={() => navMes(-1)}
+            onNext={() => navMes(1)}
+          />
           <PrimaryBtn onClick={openAdd}>+ Nuevo</PrimaryBtn>
         </HeroRight>
       </PageHero>
 
+      {/* ── KPIs del mes ── */}
       <KpiGrid>
         <KpiCard
           icon="💰"
@@ -158,6 +167,7 @@ export function DashboardPage() {
         />
       </KpiGrid>
 
+      {/* ── Gráficas ── */}
       <ChartsRow>
         <SectionCard>
           <CardTitle>Distribución por categoría</CardTitle>
@@ -177,6 +187,7 @@ export function DashboardPage() {
         </SectionCard>
       </ChartsRow>
 
+      {/* ── Movimientos recientes ── */}
       <SectionHeader>
         <SectionTitle>Últimos movimientos</SectionTitle>
         <SeeAll onClick={() => navigate("/movimientos")}>Ver todos →</SeeAll>
@@ -198,6 +209,7 @@ export function DashboardPage() {
         />
       )}
 
+      {/* ── Modal ── */}
       <Modal
         open={modalOpen}
         onClose={closeModal}
@@ -209,34 +221,7 @@ export function DashboardPage() {
   );
 }
 
-const MonthNav = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 8px;
-`;
-const MonthLabel = styled.span`
-  font-family: ${({ theme }) => theme.fonts.head};
-  font-weight: 700;
-  font-size: 0.9rem;
-  color: ${({ theme }) => theme.colors.text1};
-  min-width: 90px;
-  text-align: center;
-`;
-const NavBtn = styled.button`
-  width: 30px;
-  height: 30px;
-  border-radius: 50%;
-  border: 1px solid ${({ theme }) => theme.colors.border};
-  background: transparent;
-  color: ${({ theme }) => theme.colors.text2};
-  cursor: pointer;
-  font-size: 1.1rem;
-  transition: all 0.18s;
-  &:hover {
-    background: ${({ theme }) => theme.colors.border};
-    color: ${({ theme }) => theme.colors.text1};
-  }
-`;
+/* ── Styled locales — solo estructura de layout ── */
 const KpiGrid = styled.div`
   display: grid;
   grid-template-columns: repeat(4, 1fr);
@@ -248,6 +233,7 @@ const KpiGrid = styled.div`
     grid-template-columns: 1fr;
   }
 `;
+
 const ChartsRow = styled.div`
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -256,17 +242,20 @@ const ChartsRow = styled.div`
     grid-template-columns: 1fr;
   }
 `;
+
 const SectionHeader = styled.div`
   display: flex;
   align-items: center;
   justify-content: space-between;
 `;
+
 const SectionTitle = styled.h2`
   font-family: ${({ theme }) => theme.fonts.head};
   font-weight: 700;
   font-size: 1rem;
   color: ${({ theme }) => theme.colors.text1};
 `;
+
 const SeeAll = styled.span`
   font-size: 0.82rem;
   color: ${({ theme }) => theme.colors.accent};
