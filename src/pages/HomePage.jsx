@@ -102,7 +102,7 @@ export function HomePage() {
           </WelcomeSub>
         </WelcomeLeft>
         <WelcomeRight>
-          <BigMonto $color="#5b8dee">
+          <BigMonto $color={({ theme }) => theme.colors.accent}>
             {moneda} {totalMes.toLocaleString()}
           </BigMonto>
           <BigLabel>Total del mes</BigLabel>
@@ -116,23 +116,35 @@ export function HomePage() {
           <ProgressWrap>
             <ProgRow>
               <ProgLabel>Pagados</ProgLabel>
-              <ProgVal $color="#43e97b">
+              <ProgVal $color={({ theme }) => theme.colors.income}>
                 {moneda} {pagadosMes.toLocaleString()}
               </ProgVal>
             </ProgRow>
             <ProgressBar>
-              <ProgressFill $pct={pctPagado} $color="#43e97b" />
+              <ProgressFill
+                $pct={pctPagado}
+                $color={({ theme }) => theme.colors.income}
+              />
             </ProgressBar>
             <ProgRow>
               <ProgLabel>Pendientes</ProgLabel>
-              <ProgVal $color="#ffcb05">
+              <ProgVal $color={({ theme }) => theme.colors.pending}>
                 {moneda} {(totalMes - pagadosMes).toLocaleString()}
               </ProgVal>
             </ProgRow>
             <ProgressBar>
-              <ProgressFill $pct={100 - pctPagado} $color="#ffcb05" />
+              <ProgressFill
+                $pct={100 - pctPagado}
+                $color={({ theme }) => theme.colors.pending}
+              />
             </ProgressBar>
-            <PctBadge $color={pctPagado > 70 ? "#43e97b" : "#ffcb05"}>
+            <PctBadge
+              $color={
+                pctPagado > 70
+                  ? ({ theme }) => theme.colors.income
+                  : ({ theme }) => theme.colors.pending
+              }
+            >
               {pctPagado}% pagado
             </PctBadge>
           </ProgressWrap>
@@ -233,7 +245,11 @@ export function HomePage() {
 const WelcomeCard = styled.div`
   position: relative;
   overflow: hidden;
-  background: linear-gradient(135deg, #13162a 0%, #181c38 60%, #1a1040 100%);
+  /* ✅ Usa colores del tema en lugar de valores hardcodeados */
+  background: ${({ theme }) =>
+    theme.mode === "dark"
+      ? "linear-gradient(135deg, #13162a 0%, #181c38 60%, #1a1040 100%)"
+      : `linear-gradient(135deg, ${theme.colors.bgCard} 0%, ${theme.colors.bgCardHov} 100%)`};
   border: 1px solid ${({ theme }) => theme.colors.border};
   border-radius: ${({ theme }) => theme.radii.xl};
   padding: 28px;
@@ -252,7 +268,7 @@ const WelcomeGlow = styled.div`
   border-radius: 50%;
   background: radial-gradient(
     circle,
-    rgba(91, 141, 238, 0.18) 0%,
+    ${({ theme }) => theme.colors.accentGlow} 0%,
     transparent 70%
   );
   pointer-events: none;
@@ -277,11 +293,12 @@ const WelcomeSub = styled.p`
 const WelcomeRight = styled.div`
   text-align: right;
 `;
+/* ✅ $color ahora usa theme.colors.accent via prop o fallback al token */
 const BigMonto = styled.div`
   font-family: ${({ theme }) => theme.fonts.head};
   font-weight: 900;
   font-size: clamp(1.5rem, 4vw, 2.2rem);
-  color: ${({ $color }) => $color};
+  color: ${({ theme }) => theme.colors.accent};
 `;
 const BigLabel = styled.div`
   font-size: 0.75rem;
@@ -309,7 +326,8 @@ const ProgVal = styled.span`
   font-family: ${({ theme }) => theme.fonts.head};
   font-weight: 700;
   font-size: 0.85rem;
-  color: ${({ $color }) => $color};
+  /* ✅ Usa colores semánticos del tema */
+  color: ${({ $color, theme }) => $color ?? theme.colors.text1};
 `;
 const ProgressBar = styled.div`
   height: 8px;
@@ -320,7 +338,7 @@ const ProgressBar = styled.div`
 const ProgressFill = styled.div`
   height: 100%;
   width: ${({ $pct }) => $pct}%;
-  background: ${({ $color }) => $color};
+  background: ${({ $color, theme }) => $color ?? theme.colors.accent};
   border-radius: 99px;
   transition: width 0.6s ease;
 `;
@@ -332,9 +350,10 @@ const PctBadge = styled.div`
   font-family: ${({ theme }) => theme.fonts.head};
   font-weight: 700;
   font-size: 0.75rem;
-  background: ${({ $color }) => $color}18;
-  border: 1px solid ${({ $color }) => $color}44;
-  color: ${({ $color }) => $color};
+  background: ${({ $color, theme }) => ($color ?? theme.colors.accent) + "18"};
+  border: 1px solid
+    ${({ $color, theme }) => ($color ?? theme.colors.accent) + "44"};
+  color: ${({ $color, theme }) => $color ?? theme.colors.accent};
 `;
 const WeekBars = styled.div`
   display: flex;
@@ -364,7 +383,12 @@ const WeekBar = styled.div`
     left: 0;
     right: 0;
     height: ${({ $pct }) => $pct}%;
-    background: linear-gradient(180deg, #5b8dee 0%, #3d5fb5 100%);
+    /* ✅ Usa accent del tema en lugar de color hardcodeado */
+    background: linear-gradient(
+      180deg,
+      ${({ theme }) => theme.colors.accent} 0%,
+      ${({ theme }) => theme.colors.accent}99 100%
+    );
     border-radius: 6px 6px 0 0;
     transition: height 0.5s ease;
   }
