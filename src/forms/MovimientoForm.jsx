@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import styled from "styled-components";
+import styled, { css } from "styled-components";
 import { useDispatch, useSelector } from "react-redux";
 import { addMovimiento, editMovimiento } from "../slices/movimientosSlice";
 
@@ -128,6 +128,7 @@ const Form = styled.form`
   flex-direction: column;
   gap: 14px;
 `;
+
 const Row = styled.div`
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -136,11 +137,13 @@ const Row = styled.div`
     grid-template-columns: 1fr;
   }
 `;
+
 const Field = styled.div`
   display: flex;
   flex-direction: column;
   gap: 5px;
 `;
+
 const FLabel = styled.label`
   font-family: ${({ theme }) => theme.fonts.head};
   font-size: 0.72rem;
@@ -149,29 +152,42 @@ const FLabel = styled.label`
   text-transform: uppercase;
   color: ${({ theme }) => theme.colors.text3};
 `;
-const inputBase = `
-  padding:10px 13px;background:${({ theme }) => theme.colors.inputBg};
-  border:1.5px solid;outline:none;
-  font-family:inherit;font-size:.9rem;color:#edf0ff;
-  transition:border-color .2s;
-  &:focus{border-color:#5b8dee;}
+
+/* ✅ inputBase como css`` helper — las interpolaciones de theme se resuelven correctamente */
+const inputBase = css`
+  padding: 10px 13px;
+  background: ${({ theme }) => theme.colors.inputBg};
+  border: 1.5px solid ${({ theme }) => theme.colors.border};
+  border-radius: ${({ theme }) => theme.radii.md};
+  outline: none;
+  font-family: inherit;
+  font-size: 0.9rem;
+  /* ✅ Usa color del tema en lugar de #edf0ff hardcodeado */
+  color: ${({ theme }) => theme.colors.text1};
+  transition: border-color 0.2s;
+  /* ✅ Usa accent del tema en lugar de #5b8dee hardcodeado */
+  &:focus {
+    border-color: ${({ theme }) => theme.colors.accent};
+  }
 `;
+
 const FInput = styled.input`
-  ${inputBase}border-color:${({ theme }) => theme.colors.border};
-  border-radius: ${({ theme }) => theme.radii.md};
+  ${inputBase}
 `;
+
 const FSelect = styled.select`
-  ${inputBase}border-color:${({ theme }) => theme.colors.border};
-  border-radius: ${({ theme }) => theme.radii.md};
+  ${inputBase}
   background: ${({ theme }) => theme.colors.selectBg};
   cursor: pointer;
 `;
+
 const BtnRow = styled.div`
   display: flex;
   gap: 10px;
   justify-content: flex-end;
   margin-top: 4px;
 `;
+
 const CancelBtn = styled.button`
   padding: 10px 20px;
   border-radius: ${({ theme }) => theme.radii.md};
@@ -187,6 +203,7 @@ const CancelBtn = styled.button`
     background: ${({ theme }) => theme.colors.border};
   }
 `;
+
 const SubmitBtn = styled.button`
   padding: 10px 24px;
   border-radius: ${({ theme }) => theme.radii.md};

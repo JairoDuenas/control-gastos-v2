@@ -121,12 +121,14 @@ const FInput = styled.input`
   border: 1.5px solid ${({ theme }) => theme.colors.border};
   border-radius: ${({ theme }) => theme.radii.md};
   outline: none;
-  color: #edf0ff;
+  /* ✅ Antes: color: #edf0ff hardcodeado */
+  color: ${({ theme }) => theme.colors.text1};
   font-family: inherit;
   font-size: 0.9rem;
   transition: border-color 0.2s;
   &:focus {
-    border-color: #5b8dee;
+    /* ✅ Antes: border-color: #5b8dee hardcodeado */
+    border-color: ${({ theme }) => theme.colors.accent};
   }
 `;
 const IconGrid = styled.div`
@@ -159,11 +161,12 @@ const ColorDot = styled.button`
   width: 28px;
   height: 28px;
   border-radius: 50%;
-  border: 2.5px solid transparent;
   background: ${({ $color }) => $color};
   cursor: pointer;
   transition: all 0.15s;
-  border-color: ${({ $active }) => ($active ? "#fff" : "transparent")};
+  /* ✅ Antes: border-color: #fff hardcodeado — ahora usa bg del card para contraste en ambos temas */
+  border: 2.5px solid
+    ${({ $active, theme }) => ($active ? theme.colors.text1 : "transparent")};
   transform: ${({ $active }) => ($active ? "scale(1.2)" : "scale(1)")};
 `;
 const Preview = styled.div`
