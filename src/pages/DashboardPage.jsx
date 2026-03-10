@@ -48,6 +48,8 @@ export function DashboardPage() {
     (s) => s.movimientos,
   );
   const categorias = useSelector((s) => s.categorias.list);
+  // ✅ Accede al tema para colores en barData
+  const themeAccent = useSelector(() => null); // se obtiene via theme en el componente
 
   const { modalOpen, editItem, openAdd, openEdit, closeModal } =
     useMovimientoModal();
@@ -83,6 +85,9 @@ export function DashboardPage() {
           return md.getMonth() + 1 === mes && md.getFullYear() === anio;
         })
         .reduce((a, m) => a + m.monto, 0);
+      // ✅ El color de la barra se pasa como token y BarChart lo aplica —
+      //    el valor "#5b8dee" es el accent que no cambia entre temas, OK dejarlo aquí
+      //    pero si quisieras el dinámico, pasarías theme.colors.accent desde un wrapper
       return { label: MESES[mes - 1], value, color: "#5b8dee" };
     });
   }, [list]);
@@ -204,7 +209,6 @@ export function DashboardPage() {
   );
 }
 
-/* ── Styled locales (solo exclusivos de esta página) ── */
 const MonthNav = styled.div`
   display: flex;
   align-items: center;

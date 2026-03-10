@@ -35,21 +35,22 @@ export function Header({ onToggleSidebar }) {
       <Center>
         <KpiRow>
           <KpiItem>
-            <KpiVal $color={({ theme }) => theme.colors.text1}>
+            {/* ✅ $color no puede ser una función — se pasa el valor o se omite para usar theme */}
+            <KpiVal>
               {user?.moneda ?? "$"} {total.toLocaleString()}
             </KpiVal>
             <KpiLab>Total mes</KpiLab>
           </KpiItem>
           <KpiSep />
           <KpiItem>
-            <KpiVal $color="#43e97b">
+            <KpiVal $color="income">
               {user?.moneda ?? "$"} {pagados.toLocaleString()}
             </KpiVal>
             <KpiLab>Pagados</KpiLab>
           </KpiItem>
           <KpiSep />
           <KpiItem>
-            <KpiVal $color="#ffcb05">
+            <KpiVal $color="pending">
               {user?.moneda ?? "$"} {pendientes.toLocaleString()}
             </KpiVal>
             <KpiLab>Pendientes</KpiLab>
@@ -166,11 +167,14 @@ const KpiItem = styled.div`
   flex-direction: column;
   align-items: center;
 `;
+
+/* ✅ $color acepta un token semántico ("income", "pending") y lo resuelve desde el tema */
 const KpiVal = styled.span`
   font-family: ${({ theme }) => theme.fonts.head};
   font-weight: 700;
   font-size: 0.9rem;
-  color: ${({ $color }) => $color};
+  color: ${({ $color, theme }) =>
+    $color ? (theme.colors[$color] ?? $color) : theme.colors.text1};
   white-space: nowrap;
 `;
 const KpiLab = styled.span`
@@ -211,14 +215,26 @@ const UserEmail = styled.span`
   transition: color 0.3s;
 `;
 
-const iconBtn = `
-  width:34px;height:34px;border-radius:50%;cursor:pointer;font-size:1rem;
-  display:flex;align-items:center;justify-content:center;
-  transition:border-color .2s,color .2s,background .2s,transform .2s;
+/* ✅ iconBtn como css helper válido - antes era string plano */
+import { css } from "styled-components";
+const iconBtn = css`
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  cursor: pointer;
+  font-size: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition:
+    border-color 0.2s,
+    color 0.2s,
+    background 0.2s,
+    transform 0.2s;
 `;
 const ThemeBtn = styled.button`
   ${iconBtn}
-  border:1.5px solid ${({ theme }) => theme.colors.border};
+  border: 1.5px solid ${({ theme }) => theme.colors.border};
   background: ${({ theme }) => theme.colors.bgCard};
   color: ${({ theme }) => theme.colors.text2};
   &:hover {
@@ -229,7 +245,7 @@ const ThemeBtn = styled.button`
 `;
 const LogoutBtn = styled.button`
   ${iconBtn}
-  border:1.5px solid ${({ theme }) => theme.colors.border};
+  border: 1.5px solid ${({ theme }) => theme.colors.border};
   background: ${({ theme }) => theme.colors.bgCard};
   color: ${({ theme }) => theme.colors.text2};
   &:hover {

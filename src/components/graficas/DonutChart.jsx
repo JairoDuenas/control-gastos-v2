@@ -1,6 +1,9 @@
-import styled from "styled-components";
+import styled, { useTheme } from "styled-components";
 
 export function DonutChart({ data, size = 180, thickness = 32 }) {
+  // ✅ Accede al tema para usar sus colores en el SVG (que no soporta styled-components directamente)
+  const theme = useTheme();
+
   const r = (size - thickness) / 2;
   const cx = size / 2;
   const circ = 2 * Math.PI * r;
@@ -19,16 +22,15 @@ export function DonutChart({ data, size = 180, thickness = 32 }) {
   return (
     <Wrap>
       <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
-        {/* Track */}
+        {/* ✅ Track usa color del tema en lugar de #1e2440 hardcodeado */}
         <circle
           cx={cx}
           cy={cx}
           r={r}
           fill="none"
-          stroke="#1e2440"
+          stroke={theme.colors.border}
           strokeWidth={thickness}
         />
-        {/* Slices */}
         {slices.map((s, i) => (
           <circle
             key={i}
@@ -43,12 +45,12 @@ export function DonutChart({ data, size = 180, thickness = 32 }) {
             style={{ transition: "stroke-dasharray .5s ease" }}
           />
         ))}
-        {/* Centro */}
+        {/* ✅ Textos usan colores del tema en lugar de #edf0ff y #3d4f72 hardcodeados */}
         <text
           x={cx}
           y={cx - 6}
           textAnchor="middle"
-          fill="#edf0ff"
+          fill={theme.colors.text1}
           style={{
             fontFamily: "'Exo 2',sans-serif",
             fontWeight: 900,
@@ -61,7 +63,7 @@ export function DonutChart({ data, size = 180, thickness = 32 }) {
           x={cx}
           y={cx + 14}
           textAnchor="middle"
-          fill="#3d4f72"
+          fill={theme.colors.text3}
           style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 10 }}
         >
           categorías

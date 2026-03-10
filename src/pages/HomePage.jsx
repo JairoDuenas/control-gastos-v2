@@ -90,7 +90,6 @@ export function HomePage() {
 
   return (
     <PageShell>
-      {/* Bienvenida */}
       <WelcomeCard>
         <WelcomeGlow />
         <WelcomeLeft>
@@ -102,7 +101,8 @@ export function HomePage() {
           </WelcomeSub>
         </WelcomeLeft>
         <WelcomeRight>
-          <BigMonto $color={({ theme }) => theme.colors.accent}>
+          {/* ✅ BigMonto ya no necesita $color — usa theme.colors.accent directamente */}
+          <BigMonto>
             {moneda} {totalMes.toLocaleString()}
           </BigMonto>
           <BigLabel>Total del mes</BigLabel>
@@ -110,47 +110,34 @@ export function HomePage() {
       </WelcomeCard>
 
       <TwoCol>
-        {/* Estado de pagos */}
         <SectionCard>
           <CardTitle>💳 Estado de pagos</CardTitle>
           <ProgressWrap>
             <ProgRow>
               <ProgLabel>Pagados</ProgLabel>
-              <ProgVal $color={({ theme }) => theme.colors.income}>
+              {/* ✅ $color recibe string "income"/"pending", no una función */}
+              <ProgVal $color="income">
                 {moneda} {pagadosMes.toLocaleString()}
               </ProgVal>
             </ProgRow>
             <ProgressBar>
-              <ProgressFill
-                $pct={pctPagado}
-                $color={({ theme }) => theme.colors.income}
-              />
+              <ProgressFill $pct={pctPagado} $color="income" />
             </ProgressBar>
             <ProgRow>
               <ProgLabel>Pendientes</ProgLabel>
-              <ProgVal $color={({ theme }) => theme.colors.pending}>
+              <ProgVal $color="pending">
                 {moneda} {(totalMes - pagadosMes).toLocaleString()}
               </ProgVal>
             </ProgRow>
             <ProgressBar>
-              <ProgressFill
-                $pct={100 - pctPagado}
-                $color={({ theme }) => theme.colors.pending}
-              />
+              <ProgressFill $pct={100 - pctPagado} $color="pending" />
             </ProgressBar>
-            <PctBadge
-              $color={
-                pctPagado > 70
-                  ? ({ theme }) => theme.colors.income
-                  : ({ theme }) => theme.colors.pending
-              }
-            >
+            <PctBadge $color={pctPagado > 70 ? "income" : "pending"}>
               {pctPagado}% pagado
             </PctBadge>
           </ProgressWrap>
         </SectionCard>
 
-        {/* Actividad semanal */}
         <SectionCard>
           <CardTitle>📅 Actividad semanal</CardTitle>
           <WeekBars>
@@ -170,7 +157,6 @@ export function HomePage() {
         </SectionCard>
       </TwoCol>
 
-      {/* Top categorías */}
       <SectionCard>
         <CardTitle>🏆 Top categorías del mes</CardTitle>
         {topCats.length > 0 ? (
@@ -210,7 +196,6 @@ export function HomePage() {
         )}
       </SectionCard>
 
-      {/* Resumen global — reutiliza StatGrid / StatItem */}
       <StatGrid>
         <StatItem $color="#5b8dee">
           <StatIcon>📊</StatIcon>
@@ -245,7 +230,6 @@ export function HomePage() {
 const WelcomeCard = styled.div`
   position: relative;
   overflow: hidden;
-  /* ✅ Usa colores del tema en lugar de valores hardcodeados */
   background: ${({ theme }) =>
     theme.mode === "dark"
       ? "linear-gradient(135deg, #13162a 0%, #181c38 60%, #1a1040 100%)"
@@ -293,7 +277,6 @@ const WelcomeSub = styled.p`
 const WelcomeRight = styled.div`
   text-align: right;
 `;
-/* ✅ $color ahora usa theme.colors.accent via prop o fallback al token */
 const BigMonto = styled.div`
   font-family: ${({ theme }) => theme.fonts.head};
   font-weight: 900;
@@ -322,12 +305,12 @@ const ProgLabel = styled.span`
   font-size: 0.8rem;
   color: ${({ theme }) => theme.colors.text2};
 `;
+/* ✅ $color es un token ("income", "pending") que se resuelve desde theme.colors */
 const ProgVal = styled.span`
   font-family: ${({ theme }) => theme.fonts.head};
   font-weight: 700;
   font-size: 0.85rem;
-  /* ✅ Usa colores semánticos del tema */
-  color: ${({ $color, theme }) => $color ?? theme.colors.text1};
+  color: ${({ $color, theme }) => theme.colors[$color] ?? theme.colors.text1};
 `;
 const ProgressBar = styled.div`
   height: 8px;
@@ -338,7 +321,8 @@ const ProgressBar = styled.div`
 const ProgressFill = styled.div`
   height: 100%;
   width: ${({ $pct }) => $pct}%;
-  background: ${({ $color, theme }) => $color ?? theme.colors.accent};
+  background: ${({ $color, theme }) =>
+    theme.colors[$color] ?? theme.colors.accent};
   border-radius: 99px;
   transition: width 0.6s ease;
 `;
@@ -350,10 +334,11 @@ const PctBadge = styled.div`
   font-family: ${({ theme }) => theme.fonts.head};
   font-weight: 700;
   font-size: 0.75rem;
-  background: ${({ $color, theme }) => ($color ?? theme.colors.accent) + "18"};
+  background: ${({ $color, theme }) =>
+    `${theme.colors[$color] ?? theme.colors.accent}18`};
   border: 1px solid
-    ${({ $color, theme }) => ($color ?? theme.colors.accent) + "44"};
-  color: ${({ $color, theme }) => $color ?? theme.colors.accent};
+    ${({ $color, theme }) => `${theme.colors[$color] ?? theme.colors.accent}44`};
+  color: ${({ $color, theme }) => theme.colors[$color] ?? theme.colors.accent};
 `;
 const WeekBars = styled.div`
   display: flex;
@@ -383,7 +368,6 @@ const WeekBar = styled.div`
     left: 0;
     right: 0;
     height: ${({ $pct }) => $pct}%;
-    /* ✅ Usa accent del tema en lugar de color hardcodeado */
     background: linear-gradient(
       180deg,
       ${({ theme }) => theme.colors.accent} 0%,

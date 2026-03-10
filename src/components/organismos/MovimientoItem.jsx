@@ -40,6 +40,7 @@ export function MovimientoItem({ mov, onEdit }) {
       <Middle>
         <Badge estado={mov.estado} />
       </Middle>
+      {/* ✅ $paid pasado al styled pero el color lo lee del tema */}
       <Amount $paid={mov.estado === 1}>
         {moneda}{" "}
         {mov.monto.toLocaleString(undefined, { minimumFractionDigits: 2 })}
@@ -122,11 +123,13 @@ const Middle = styled.div`
     display: none;
   }
 `;
+/* ✅ Usa colores semánticos del tema en lugar de #43e97b / #ffcb05 hardcodeados */
 const Amount = styled.span`
   font-family: ${({ theme }) => theme.fonts.head};
   font-weight: 700;
   font-size: 0.95rem;
-  color: ${({ $paid }) => ($paid ? "#43e97b" : "#ffcb05")};
+  color: ${({ $paid, theme }) =>
+    $paid ? theme.colors.income : theme.colors.pending};
   white-space: nowrap;
   flex-shrink: 0;
 `;
@@ -149,6 +152,6 @@ const ActionBtn = styled.button`
   transition: background 0.15s;
   &:hover {
     background: ${({ $danger, theme }) =>
-      $danger ? "rgba(255,89,89,0.15)" : theme.colors.border};
+      $danger ? `${theme.colors.expense}22` : theme.colors.border};
   }
 `;

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import styled, { keyframes } from "styled-components";
+import styled, { keyframes, css } from "styled-components";
 import { useSelector, useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { updateUser, logout } from "../slices/authSlice";
@@ -89,7 +89,6 @@ export function ConfigPage() {
 
   return (
     <PageShell>
-      {/* Hero de perfil */}
       <ProfileHero>
         <Avatar>{(user?.nombre?.[0] ?? "U").toUpperCase()}</Avatar>
         <HeroInfo>
@@ -101,7 +100,6 @@ export function ConfigPage() {
         </HeroInfo>
       </ProfileHero>
 
-      {/* Stats */}
       <StatGrid>
         <StatItem $color="#5b8dee">
           <StatIcon>💸</StatIcon>
@@ -127,7 +125,6 @@ export function ConfigPage() {
         </StatItem>
       </StatGrid>
 
-      {/* ── Selector de tema ── */}
       <SectionCard>
         <CardTitle>🎨 Apariencia</CardTitle>
         <ThemeGrid>
@@ -139,7 +136,6 @@ export function ConfigPage() {
               onClick={() => dispatch(setTheme(t.id))}
             >
               <ThemePreview $preview={t.preview}>
-                {/* mini sidebar */}
                 <PreviewSidebar $preview={t.preview}>
                   {[...Array(4)].map((_, i) => (
                     <PreviewNavItem
@@ -149,7 +145,6 @@ export function ConfigPage() {
                     />
                   ))}
                 </PreviewSidebar>
-                {/* mini contenido */}
                 <PreviewContent $preview={t.preview}>
                   <PreviewCard $preview={t.preview} />
                   <PreviewCard $preview={t.preview} $short />
@@ -164,7 +159,6 @@ export function ConfigPage() {
           ))}
         </ThemeGrid>
 
-        {/* Toggle rápido */}
         <ToggleRow>
           <ToggleLabel>Cambio rápido</ToggleLabel>
           <ToggleSwitch
@@ -184,7 +178,6 @@ export function ConfigPage() {
       </SectionCard>
 
       <TwoCol $align="start">
-        {/* Perfil */}
         <SectionCard>
           <CardTitle>👤 Perfil personal</CardTitle>
           <Form onSubmit={handleSave}>
@@ -298,7 +291,7 @@ const ProfileHero = styled.div`
   transition: background 0.3s;
   @media (max-width: 500px) {
     flex-wrap: wrap;
-    padding: 18px 18px;
+    padding: 18px;
   }
 `;
 const Avatar = styled.div`
@@ -351,7 +344,6 @@ const ThemePill = styled.span`
   width: fit-content;
 `;
 
-/* ── Theme picker ── */
 const ThemeGrid = styled.div`
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -372,8 +364,8 @@ const ThemeOption = styled.div`
     transform 0.2s,
     box-shadow 0.2s;
   background: ${({ $preview }) => $preview.bg};
-  box-shadow: ${({ $active }) =>
-    $active ? "0 0 0 3px rgba(91,141,238,.2)" : "none"};
+  box-shadow: ${({ $active, theme }) =>
+    $active ? `0 0 0 3px ${theme.colors.accentGlow}` : "none"};
   &:hover {
     transform: translateY(-2px);
     border-color: ${({ theme }) => theme.colors.accent};
@@ -443,7 +435,6 @@ const ActiveDot = styled.span`
   animation: ${pulse} 2s ease infinite;
 `;
 
-/* ── Toggle switch ── */
 const ToggleRow = styled.div`
   display: flex;
   align-items: center;
@@ -488,7 +479,24 @@ const ToggleKnob = styled.div`
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
 `;
 
-/* ── Formulario de perfil ── */
+/* ✅ inputBase como css`` helper — antes era una función que retornaba string,
+   lo que styled-components NO puede interpolar correctamente */
+const inputBase = css`
+  padding: 10px 13px;
+  background: ${({ theme }) => theme.colors.inputBg};
+  border: 1.5px solid ${({ theme }) => theme.colors.border};
+  border-radius: ${({ theme }) => theme.radii.md};
+  color: ${({ theme }) => theme.colors.text1};
+  font-family: ${({ theme }) => theme.fonts.body};
+  font-size: 0.88rem;
+  outline: none;
+  transition:
+    border-color 0.2s,
+    background 0.3s;
+  &:focus {
+    border-color: ${({ theme }) => theme.colors.accent};
+  }
+`;
 const Form = styled.form`
   display: flex;
   flex-direction: column;
@@ -507,21 +515,11 @@ const FLabel = styled.label`
   text-transform: uppercase;
   color: ${({ theme }) => theme.colors.text3};
 `;
-const inputBase = ({ theme }) => `
-  padding: 10px 13px;
-  background: ${theme.colors.inputBg};
-  border: 1.5px solid ${theme.colors.border};
-  border-radius: ${theme.radii.md};
-  color: ${theme.colors.text1};
-  font-family: ${theme.fonts.body}; font-size: .88rem; outline: none;
-  transition: border-color .2s, background .3s;
-  &:focus { border-color: ${theme.colors.accent}; }
-`;
 const FInput = styled.input`
   ${inputBase}
 `;
 const FSelect = styled.select`
-  ${inputBase};
+  ${inputBase}
   background: ${({ theme }) => theme.colors.selectBg};
   cursor: pointer;
 `;
@@ -544,9 +542,9 @@ const SaveBtn = styled.button`
 const SuccessMsg = styled.div`
   padding: 9px 14px;
   border-radius: ${({ theme }) => theme.radii.md};
-  background: rgba(67, 233, 123, 0.1);
-  border: 1px solid rgba(67, 233, 123, 0.3);
-  color: #43e97b;
+  background: ${({ theme }) => `${theme.colors.income}18`};
+  border: 1px solid ${({ theme }) => `${theme.colors.income}44`};
+  color: ${({ theme }) => theme.colors.income};
   font-size: 0.82rem;
   text-align: center;
 `;
@@ -606,13 +604,13 @@ const DangerBtn = styled.button`
   font-family: ${({ theme }) => theme.fonts.body};
   font-weight: 600;
   font-size: 0.82rem;
-  background: ${({ $outline }) =>
-    $outline ? "transparent" : "rgba(255,89,89,.15)"};
-  border: 1px solid rgba(255, 89, 89, 0.44);
+  background: ${({ $outline, theme }) =>
+    $outline ? "transparent" : `${theme.colors.expense}22`};
+  border: 1px solid ${({ theme }) => `${theme.colors.expense}44`};
   color: ${({ theme }) => theme.colors.expense};
   transition: all 0.18s;
   &:hover {
-    background: rgba(255, 89, 89, 0.22);
+    background: ${({ theme }) => `${theme.colors.expense}33`};
     border-color: ${({ theme }) => theme.colors.expense};
   }
 `;
