@@ -46,7 +46,7 @@ export function CategoriasPage() {
         <PrimaryBtn onClick={openAdd}>+ Nueva categoría</PrimaryBtn>
       </PageHero>
 
-      {/* Resumen horizontal */}
+      {/* Resumen horizontal — scroll en desktop, wrap en mobile */}
       <ScrollRow>
         {categorias.map((cat) => {
           const total = movimientos
@@ -103,11 +103,16 @@ export function CategoriasPage() {
 }
 
 /* ── Styled locales ── */
+
+/* ✅ Siempre scroll horizontal — evita que los chips colapsen en mobile */
 const ScrollRow = styled.div`
   display: flex;
   gap: 10px;
   overflow-x: auto;
   padding-bottom: 6px;
+  /* Que no se compriman los chips */
+  flex-wrap: nowrap;
+
   &::-webkit-scrollbar {
     height: 4px;
   }
@@ -116,13 +121,17 @@ const ScrollRow = styled.div`
     border-radius: 4px;
   }
 
+  /* En mobile mostramos scroll horizontal también, más cómodo que un grid apretado */
   @media (max-width: 600px) {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    overflow-x: visible;
-    padding-bottom: 0;
+    /* padding lateral para que el primer chip no quede pegado al borde */
+    padding-left: 2px;
+    padding-right: 2px;
+    /* scroll snapping para mejor UX táctil */
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
   }
 `;
+
 const SummaryChip = styled.div`
   display: flex;
   align-items: center;
@@ -131,14 +140,17 @@ const SummaryChip = styled.div`
   border-radius: ${({ theme }) => theme.radii.md};
   background: ${({ theme }) => theme.colors.bgCard};
   border: 1px solid ${({ $color }) => `${$color}33`};
-  flex-shrink: 0;
+  /* ✅ Ancho fijo para que el scroll funcione bien en cualquier pantalla */
+  flex: 0 0 148px;
   min-width: 148px;
 
   @media (max-width: 600px) {
-    min-width: 0;
-    flex-shrink: 1;
+    scroll-snap-align: start;
+    flex: 0 0 140px;
+    min-width: 140px;
   }
 `;
+
 const ChipIcon = styled.span`
   font-size: 1.1rem;
   flex-shrink: 0;
@@ -178,20 +190,25 @@ const ChipFill = styled.div`
   background: ${({ $color }) => $color};
   transition: height 0.5s ease;
 `;
+
+/* ✅ Grid responsive con auto-fill — se adapta solo sin tantos breakpoints manuales */
 const Grid = styled.div`
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
   gap: 14px;
-  @media (max-width: 1024px) {
-    grid-template-columns: repeat(3, 1fr);
-  }
-  @media (max-width: 700px) {
+
+  /* En pantallas muy chicas forzamos 2 columnas para que no queden tarjetas enormes */
+  @media (max-width: 480px) {
     grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
   }
-  @media (max-width: 420px) {
+
+  /* En pantallas muy muy chicas, 1 columna */
+  @media (max-width: 320px) {
     grid-template-columns: 1fr;
   }
 `;
+
 const AddCard = styled.div`
   display: flex;
   flex-direction: column;

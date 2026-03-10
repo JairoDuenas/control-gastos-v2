@@ -6,6 +6,10 @@ export const PageShell = styled.div`
   flex-direction: column;
   gap: ${({ $gap }) => $gap ?? "20px"};
   animation: fadeUp 0.3s ease;
+  /* ✅ Evita que el contenido se desborde horizontalmente */
+  min-width: 0;
+  width: 100%;
+  overflow-x: hidden;
 `;
 
 /* ── Hero de página (banner superior) ── */
@@ -17,16 +21,17 @@ export const PageHero = styled.div`
   gap: 12px;
   padding: 20px 24px;
   border-radius: ${({ theme }) => theme.radii.lg};
-  background: linear-gradient(
-    135deg,
-    ${({ theme }) => theme.colors.bgCard} 0%,
-    #181c38 100%
-  );
+  /* ✅ Gradiente usa colores del tema en lugar de #181c38 hardcodeado */
+  background: ${({ theme }) =>
+    theme.mode === "dark"
+      ? `linear-gradient(135deg, ${theme.colors.bgCard} 0%, #181c38 100%)`
+      : `linear-gradient(135deg, ${theme.colors.bgCard} 0%, ${theme.colors.bgCardHov} 100%)`};
   border: 1px solid ${({ theme }) => theme.colors.border};
 
   @media (max-width: 480px) {
     flex-direction: column;
     align-items: flex-start;
+    padding: 16px;
   }
 `;
 
@@ -84,6 +89,9 @@ export const SectionCard = styled.div`
   border-radius: ${({ theme }) => theme.radii.lg};
   padding: ${({ $pad }) => $pad ?? "20px"};
   transition: transform 0.2s;
+  /* ✅ Evita overflow interno */
+  min-width: 0;
+  overflow: hidden;
   ${({ $hoverable }) =>
     $hoverable && `&:hover { transform: translateY(-2px); }`}
 `;
