@@ -2,7 +2,8 @@ import { useState } from "react";
 import styled, { css } from "styled-components";
 import { useSelector, useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
-import { updateUser, logout } from "../slices/authSlice";
+import { updateUser } from "../slices/authSlice";
+import { useSupabaseAuth } from "../hooks/useSupabaseAuth";
 import { setTheme } from "../slices/uiSlice";
 import { ProfileHero } from "../components/organismos/ProfileHero";
 import { ThemePicker } from "../components/organismos/ThemePicker";
@@ -47,10 +48,12 @@ export function ConfigPage() {
     setTimeout(() => setSaved(false), 2500);
   };
 
-  const handleLogout = () => {
-    dispatch(logout());
-    navigate("/login");
-  };
+  const { signOut } = useSupabaseAuth();
+
+  // Para usuario Demo (isDemo===true) hace logout directo.
+  // Para usuario Google (Supabase) llama signOut() que invalida
+  // la sesión en el servidor y luego redirige a /login.
+  const handleLogout = () => signOut();
 
   const handleClearData = () => {
     if (!clearing) {
