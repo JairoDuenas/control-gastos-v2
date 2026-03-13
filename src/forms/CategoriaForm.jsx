@@ -1,7 +1,13 @@
 import { useState, useEffect } from "react";
 import styled from "styled-components";
 import { useDispatch } from "react-redux";
+import { useSelector } from "react-redux";
 import { addCategoria, editCategoria } from "../slices/categoriasSlice";
+import {
+  addCategoriaAsync,
+  editCategoriaAsync,
+  deleteCategoriaAsync,
+} from "../slices/categoriasSlice";
 import { CAT_COLORS } from "../styles/theme";
 
 const ICONOS = [
@@ -27,6 +33,7 @@ const EMPTY = { nombre: "", icono: "📦", color: CAT_COLORS[0] };
 
 export function CategoriaForm({ editItem, onDone }) {
   const dispatch = useDispatch();
+  const { user, isDemo } = useSelector((s) => s.auth);
   const [form, setForm] = useState(EMPTY);
 
   useEffect(() => {
@@ -38,8 +45,17 @@ export function CategoriaForm({ editItem, onDone }) {
   const handleSubmit = (e) => {
     e.preventDefault();
     if (!form.nombre) return;
-    if (editItem) dispatch(editCategoria({ ...form, id: editItem.id }));
-    else dispatch(addCategoria(form));
+
+    if (isDemo) {
+      // Modo Demo — solo localStorage
+      if (editItem) dispatch(editCategoria({ ...form, id: editItem.id }));
+      else dispatch(addCategoria(form));
+    } else {
+      // Modo Google — sincroniza con Supabase
+      if (editItem)
+        dispatch(editCategoriaAsync({ payload: { ...form, id: editItem.id } }));
+      else dispatch(addCategoriaAsync({ userId: user.id, payload: form }));
+    }
     onDone();
   };
 

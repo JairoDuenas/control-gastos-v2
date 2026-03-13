@@ -2,6 +2,10 @@ import { useState, useEffect } from "react";
 import styled, { css } from "styled-components";
 import { useDispatch, useSelector } from "react-redux";
 import { addMovimiento, editMovimiento } from "../slices/movimientosSlice";
+import {
+  addMovimientoAsync,
+  editMovimientoAsync,
+} from "../slices/movimientosSlice";
 
 const EMPTY = {
   descripcion: "",
@@ -14,6 +18,7 @@ const EMPTY = {
 export function MovimientoForm({ editItem, onDone }) {
   const dispatch = useDispatch();
   const categorias = useSelector((s) => s.categorias.list);
+  const { user, isDemo } = useSelector((s) => s.auth);
   const [form, setForm] = useState(EMPTY);
 
   useEffect(() => {
@@ -42,10 +47,17 @@ export function MovimientoForm({ editItem, onDone }) {
         ? new Date(form.fecha).toISOString()
         : new Date().toISOString(),
     };
-    if (editItem) {
-      dispatch(editMovimiento({ ...payload, id: editItem.id }));
+    if (isDemo) {
+      // Modo Demo — solo localStorage
+      if (editItem) dispatch(editMovimiento({ ...payload, id: editItem.id }));
+      else dispatch(addMovimiento(payload));
     } else {
-      dispatch(addMovimiento(payload));
+      // Modo Google — sincroniza con Supabase
+      if (editItem)
+        dispatch(
+          editMovimientoAsync({ payload: { ...payload, id: editItem.id } }),
+        );
+      else dispatch(addMovimientoAsync({ userId: user.id, payload }));
     }
     onDone();
   };

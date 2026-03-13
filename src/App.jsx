@@ -5,16 +5,17 @@ import { darkTheme, lightTheme } from "./styles/theme";
 import { GlobalStyle } from "./styles/GlobalStyle";
 import { AppRouter } from "./router/AppRouter";
 import { AuthProvider } from "./providers/AuthProvider";
+import { useSyncData } from "./hooks/useSyncData";
 
 /**
- * App actualizado:
- * AuthProvider se monta dentro de BrowserRouter (para que en el futuro
- * pueda usar navigate si se necesita) y dentro de ThemeProvider (para
- * que AuthLoadingScreen acceda al tema).
- *
- * Orden: Redux Provider (main.jsx) → ThemeProvider → BrowserRouter
- *        → AuthProvider → AppRouter
+ * SyncProvider — componente puente para montar useSyncData dentro
+ * del árbol de Redux + Router. No renderiza nada visible.
  */
+function SyncProvider() {
+  useSyncData();
+  return null;
+}
+
 function ThemedApp() {
   const themeMode = useSelector((s) => s.ui.themeMode);
   const theme = themeMode === "light" ? lightTheme : darkTheme;
@@ -24,6 +25,7 @@ function ThemedApp() {
       <GlobalStyle />
       <BrowserRouter>
         <AuthProvider>
+          <SyncProvider />
           <AppRouter />
         </AuthProvider>
       </BrowserRouter>
