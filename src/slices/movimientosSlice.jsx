@@ -1,4 +1,5 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
+import { logout } from "./authSlice";
 import {
   createMovimiento,
   updateMovimiento,
@@ -221,6 +222,15 @@ const movimientosSlice = createSlice({
       state.pagados = t.pagados;
       state.pendientes = t.pendientes;
     },
+  },
+  extraReducers: (builder) => {
+    // Resetear synced al cerrar sesión para que la próxima sesión
+    // vuelva a cargar los datos desde Supabase
+    builder.addCase(logout, (state) => {
+      state.synced = false;
+      state.list = [];
+      state.filtered = [];
+    });
   },
 });
 

@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import styled, { css } from "styled-components";
 import { useDispatch, useSelector } from "react-redux";
-import { useSelector } from "react-redux";
 import { addMovimiento, editMovimiento } from "../slices/movimientosSlice";
 import {
   addMovimientoAsync,

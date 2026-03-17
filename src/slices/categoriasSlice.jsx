@@ -1,4 +1,5 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
+import { logout } from "./authSlice";
 import {
   createCategoria,
   updateCategoria,
@@ -157,6 +158,12 @@ const categoriasSlice = createSlice({
       state.list = state.list.filter((c) => c.id !== action.payload);
       save(state.list);
     },
+  },
+  extraReducers: (builder) => {
+    builder.addCase(logout, (state) => {
+      state.synced = false;
+      state.list = [];
+    });
   },
 });
 
