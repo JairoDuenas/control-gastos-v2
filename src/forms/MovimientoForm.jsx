@@ -20,6 +20,7 @@ export function MovimientoForm({ editItem, onDone }) {
   const dispatch = useDispatch();
   const categorias = useSelector((s) => s.categorias.list);
   const { user, isDemo } = useSelector((s) => s.auth);
+  const synced = useSelector((s) => s.categorias.synced);
   const [form, setForm] = useState(EMPTY);
 
   useEffect(() => {
@@ -130,7 +131,7 @@ export function MovimientoForm({ editItem, onDone }) {
         <CancelBtn type="button" onClick={onDone}>
           Cancelar
         </CancelBtn>
-        <SubmitBtn type="submit">
+        <SubmitBtn type="submit" disabled={!isDemo && !synced}>
           {editItem ? "Guardar cambios" : "Agregar"}
         </SubmitBtn>
       </BtnRow>

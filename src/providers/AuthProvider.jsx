@@ -34,25 +34,42 @@ export function AuthProvider({ children }) {
     }
 
     // Con Supabase — verificar sesión activa
-    supabase.auth.getSession().then(async ({ data: { session } }) => {
-      if (session?.user) {
-        const profile = await fetchProfile(session.user);
-        dispatch(setUser(profile));
-      } else {
+    // try/catch para evitar loading permanente si fetchProfile falla
+    supabase.auth
+      .getSession()
+      .then(async ({ data: { session } }) => {
+        try {
+          if (session?.user) {
+            const profile = await fetchProfile(session.user);
+            dispatch(setUser(profile));
+          } else {
+            dispatch(setLoading(false));
+          }
+        } catch (err) {
+          console.error("[AuthProvider] getSession error:", err);
+          dispatch(setLoading(false)); // desbloquear la app aunque haya error
+        }
+      })
+      .catch((err) => {
+        console.error("[AuthProvider] getSession failed:", err);
         dispatch(setLoading(false));
-      }
-    });
+      });
 
     // Listener en tiempo real: SIGNED_IN (callback OAuth), SIGNED_OUT
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (event, session) => {
-      if (event === "SIGNED_IN" && session?.user) {
-        const profile = await fetchProfile(session.user);
-        dispatch(setUser(profile));
-      }
-      if (event === "SIGNED_OUT") {
-        dispatch(setUser(null));
+      try {
+        if (event === "SIGNED_IN" && session?.user) {
+          const profile = await fetchProfile(session.user);
+          dispatch(setUser(profile));
+        }
+        if (event === "SIGNED_OUT") {
+          dispatch(setUser(null));
+        }
+      } catch (err) {
+        console.error("[AuthProvider] onAuthStateChange error:", err);
+        dispatch(setLoading(false));
       }
     });
 

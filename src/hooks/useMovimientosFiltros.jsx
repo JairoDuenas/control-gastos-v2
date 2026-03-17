@@ -68,9 +68,7 @@ export function useMovimientosFiltros() {
     setPage(1);
   };
   const onCategoria = (categoriaId) => {
-    dispatch(
-      setFiltros({ categoriaId: categoriaId ? parseInt(categoriaId) : null }),
-    );
+    dispatch(setFiltros({ categoriaId: categoriaId || null }));
     setPage(1);
   };
   const toggleOrden = () => setOrdenDesc((prev) => !prev);
