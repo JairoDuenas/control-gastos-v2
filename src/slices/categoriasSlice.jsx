@@ -3,7 +3,7 @@ import {
   createCategoria,
   updateCategoria,
   deleteCategoria as deleteCategoriaDB,
-} from "../services/CategoriasService";
+} from "../services/categoriasService";
 
 // ── Categorías default para modo Demo ─────────────────────────────────────
 const DEFAULTS = [
@@ -20,10 +20,23 @@ const DEFAULTS = [
 // ── localStorage (caché para ambos modos) ─────────────────────────────────
 const LS_KEY = "gastos_categorias";
 
+const DEMO_KEY = "gastos_demo_user";
+
 const load = () => {
   try {
     const s = localStorage.getItem(LS_KEY);
-    return s ? JSON.parse(s) : DEFAULTS;
+    if (!s) {
+      // Sin caché — si hay sesión Demo activa usar DEFAULTS, si no esperar sync
+      const hasDemo = !!localStorage.getItem(DEMO_KEY);
+      return hasDemo ? DEFAULTS : [];
+    }
+    const parsed = JSON.parse(s);
+    // Si los ids son numéricos ("1","2"...) es caché Demo viejo
+    // No lo usamos para usuarios Google (que no tienen gastos_demo_user)
+    const hasNumericIds = parsed.some((c) => /^\d+$/.test(String(c.id)));
+    const hasDemo = !!localStorage.getItem(DEMO_KEY);
+    if (hasNumericIds && !hasDemo) return []; // Google user — esperar sync
+    return parsed;
   } catch {
     return DEFAULTS;
   }

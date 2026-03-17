@@ -10,13 +10,8 @@ import { setMovimientos } from "../slices/movimientosSlice";
 
 /**
  * useSyncData — carga inicial de datos desde Supabase.
- *
- * Correcciones:
- *  - Limpia el localStorage de categorías ANTES de cargar desde Supabase,
- *    para evitar que ids numéricos del caché viejo contaminen el store.
- *  - Carga categorías y movimientos en secuencia (no en paralelo) para
- *    garantizar que el categoriaId de los movimientos ya tenga UUIDs válidos.
- *  - try/catch en todo el flujo para evitar estados colgados.
+ * Solo corre para usuarios Google (isDemo=false).
+ * Para Demo, los datos viven en localStorage y el slice los carga directamente.
  */
 export function useSyncData() {
   const dispatch = useDispatch();
@@ -30,33 +25,25 @@ export function useSyncData() {
 
     const sync = async () => {
       try {
-        // ── 1. Categorías ──────────────────────────────────────────────
+        // 1. Categorías primero — los movimientos dependen de sus UUIDs
         if (!categoriasSynced) {
-          // Limpiar caché viejo con ids numéricos para evitar
-          // que categoria_id llegue como NaN a Supabase
-          localStorage.removeItem("gastos_categorias");
-
           let cats = await fetchCategorias(user.id);
-
           if (cats.length === 0) {
             cats = await seedDefaultCategorias(user.id);
           }
-
           dispatch(setCategorias(cats));
         }
 
-        // ── 2. Movimientos (después de categorías para que los UUIDs ──
-        //       ya estén en el store cuando se rendericen los items)
+        // 2. Movimientos — después de que categorías tiene UUIDs reales
         if (!movimientosSynced) {
           const movs = await fetchMovimientos(user.id);
           dispatch(setMovimientos(movs));
         }
       } catch (err) {
-        console.error("[useSyncData] sync error:", err);
-        // No dejamos synced en false para siempre — forzar true
-        // para que la app funcione aunque la sync haya fallado
-        dispatch(setCategorias([]));
-        dispatch(setMovimientos([]));
+        console.error("[useSyncData]", err);
+        // Forzar synced=true con lista vacía para no bloquear la app
+        if (!categoriasSynced) dispatch(setCategorias([]));
+        if (!movimientosSynced) dispatch(setMovimientos([]));
       }
     };
 

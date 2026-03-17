@@ -5,71 +5,55 @@ import { supabase, supabaseReady } from "../lib/supabaseClient";
 import { setUser, setLoading } from "../slices/authSlice";
 
 /**
- * AuthProvider — listener global de sesión.
+ * AuthProvider — usa SOLO onAuthStateChange (patrón oficial Supabase v2).
  *
- * Comportamiento según el modo:
+ * En Supabase v2, onAuthStateChange dispara INITIAL_SESSION al montarse
+ * con el estado actual de la sesión — reemplaza a getSession().
+ * Usar ambos causaba que fetchProfile se ejecutara dos veces en paralelo,
+ * generando race conditions que dejaban loading=true indefinidamente.
  *
- *  DEMO (sin .env configurado o supabase=null):
- *    - Si ya hay sesión Demo en localStorage → loading=false desde el
- *      initialState del slice, la app abre directo.
- *    - Si no hay sesión Demo → loading=false inmediato, muestra /login.
- *    - El botón Google en LoginTemplate mostrará un mensaje de "no configurado".
- *
- *  SUPABASE (con .env configurado):
- *    - Si hay sesión Demo guardada → igual que arriba, sin tocar Supabase.
- *    - Si no hay sesión Demo → consulta getSession() a Supabase:
- *        · Hay sesión activa → setUser(profile) → /dashboard
- *        · No hay sesión     → setLoading(false) → /login
- *    - El listener onAuthStateChange captura SIGNED_IN / SIGNED_OUT.
+ * Eventos que manejamos:
+ *   INITIAL_SESSION — estado inicial al cargar la app
+ *   SIGNED_IN       — login exitoso (OAuth callback)
+ *   SIGNED_OUT      — logout
+ *   TOKEN_REFRESHED — Supabase renueva el token, sin acción necesaria
  */
 export function AuthProvider({ children }) {
   const dispatch = useDispatch();
 
   useEffect(() => {
-    // Sin Supabase configurado — solo apagar el loading si está encendido
-    // (caso: primera visita sin sesión Demo y sin Supabase).
     if (!supabaseReady) {
       dispatch(setLoading(false));
       return;
     }
 
-    // Con Supabase — verificar sesión activa
-    // try/catch para evitar loading permanente si fetchProfile falla
-    supabase.auth
-      .getSession()
-      .then(async ({ data: { session } }) => {
-        try {
-          if (session?.user) {
-            const profile = await fetchProfile(session.user);
-            dispatch(setUser(profile));
-          } else {
-            dispatch(setLoading(false));
-          }
-        } catch (err) {
-          console.error("[AuthProvider] getSession error:", err);
-          dispatch(setLoading(false)); // desbloquear la app aunque haya error
-        }
-      })
-      .catch((err) => {
-        console.error("[AuthProvider] getSession failed:", err);
-        dispatch(setLoading(false));
-      });
-
-    // Listener en tiempo real: SIGNED_IN (callback OAuth), SIGNED_OUT
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (event, session) => {
       try {
+        if (event === "INITIAL_SESSION") {
+          // Estado inicial al cargar la app
+          if (session?.user) {
+            const profile = await fetchProfile(session.user);
+            dispatch(setUser(profile));
+          } else {
+            // Sin sesión activa — mostrar login
+            dispatch(setLoading(false));
+          }
+        }
+
         if (event === "SIGNED_IN" && session?.user) {
           const profile = await fetchProfile(session.user);
           dispatch(setUser(profile));
         }
+
         if (event === "SIGNED_OUT") {
           dispatch(setUser(null));
         }
+        // TOKEN_REFRESHED: Supabase lo maneja internamente, sin acción
       } catch (err) {
         console.error("[AuthProvider] onAuthStateChange error:", err);
-        dispatch(setLoading(false));
+        dispatch(setLoading(false)); // desbloquear siempre ante error
       }
     });
 
@@ -95,8 +79,6 @@ async function fetchProfile(authUser) {
 }
 
 // ── Pantalla de carga ──────────────────────────────────────────────────────
-// Solo visible los ~300ms que tarda Supabase en responder getSession.
-// Con modo Demo ya resuelto en initialState, nunca se muestra.
 export function AuthLoadingScreen() {
   return (
     <Screen>
