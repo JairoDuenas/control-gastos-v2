@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import styled, { css } from "styled-components";
 import { useDispatch, useSelector } from "react-redux";
+import { useSelector } from "react-redux";
 import { addMovimiento, editMovimiento } from "../slices/movimientosSlice";
 import {
   addMovimientoAsync,
@@ -42,7 +43,9 @@ export function MovimientoForm({ editItem, onDone }) {
     const payload = {
       ...form,
       monto: parseFloat(form.monto),
-      categoriaId: parseInt(form.categoriaId),
+      // Demo usa id numérico string ("1","2"…), Google usa UUID string
+      // En ambos casos se mantiene como string — NO parseInt
+      categoriaId: form.categoriaId,
       fecha: form.fecha
         ? new Date(form.fecha).toISOString()
         : new Date().toISOString(),

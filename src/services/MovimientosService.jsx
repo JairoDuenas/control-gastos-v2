@@ -93,7 +93,7 @@ export async function deleteMovimiento(id) {
 }
 
 /** Actualiza solo el campo `estado` de un movimiento. */
-export async function toggleMovimientoEstado(id, nuevoEstado) {
+export async function toggleEstadoMovimiento(id, nuevoEstado) {
   const { error } = await supabase
     .from("movimientos")
     .update({ estado: nuevoEstado })

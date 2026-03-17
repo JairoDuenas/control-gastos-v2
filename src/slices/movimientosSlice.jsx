@@ -3,8 +3,8 @@ import {
   createMovimiento,
   updateMovimiento,
   deleteMovimiento as deleteMovimientoDB,
-  toggleMovimientoEstado,
-} from "../services/MovimientosService";
+  toggleEstadoMovimiento,
+} from "../services/movimientosService";
 
 // ── localStorage ───────────────────────────────────────────────────────────
 const LS_KEY = "gastos_movimientos";
@@ -81,7 +81,7 @@ export const toggleEstadoAsync = createAsyncThunk(
   "movimientos/toggleAsync",
   async ({ id, nuevoEstado }, { dispatch }) => {
     dispatch(movimientosSlice.actions._toggle(id));
-    await toggleMovimientoEstado(id, nuevoEstado);
+    await toggleEstadoMovimiento(id, nuevoEstado);
   },
 );
 
